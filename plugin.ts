@@ -352,6 +352,9 @@ export default function register(api: PluginApi) {
             "@hackernews_search",
             "@producthunt_search",
             "@scholar_search",
+            "@news_search",
+            "@google_news",
+            "@HN_frontpage",
           ],
         },
         query: { type: "string", description: "Search query (when using macro)" },
@@ -756,6 +759,34 @@ export default function register(api: PluginApi) {
       const result = await fetchApi(baseUrl, `/tabs/${tabId}/press`, {
         method: "POST",
         body: JSON.stringify({ userId, key }),
+      });
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_youtube_transcript",
+    description:
+      "Extract captions/transcripts from a YouTube video. Returns timed text segments with timestamps. Uses yt-dlp if available, otherwise falls back to browser-based extraction.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "YouTube video URL" },
+        languages: {
+          type: "array",
+          items: { type: "string" },
+          description: "Preferred language codes (default: ['en']). First matching language is used.",
+          default: ["en"],
+        },
+      },
+      required: ["url"],
+    },
+    async execute(_id, params) {
+      const { url, languages = ["en"] } = params as { url: string; languages?: string[] };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/youtube/transcript`, {
+        method: "POST",
+        body: JSON.stringify({ url, languages, userId }),
       });
       return toToolResult(result);
     },
