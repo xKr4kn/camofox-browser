@@ -93,11 +93,54 @@ Use these instead of constructing URLs:
 | `@google_search` | Google |
 | `@youtube_search` | YouTube |
 | `@amazon_search` | Amazon |
-| `@reddit_search` | Reddit |
+| `@reddit_search` | Reddit (JSON) |
+| `@reddit_subreddit` | Reddit subreddit (JSON) |
 | `@wikipedia_search` | Wikipedia |
 | `@twitter_search` | Twitter/X |
 | `@yelp_search` | Yelp |
+| `@spotify_search` | Spotify |
+| `@netflix_search` | Netflix |
 | `@linkedin_search` | LinkedIn |
+| `@instagram_search` | Instagram |
+| `@tiktok_search` | TikTok |
+| `@twitch_search` | Twitch |
+| `@perplexity_search` | Perplexity AI |
+| `@phind_search` | Phind (AI search) |
+| `@brave_search` | Brave Search |
+| `@kagi_search` | Kagi Search |
+| `@bing_search` | Bing |
+| `@yahoo_search` | Yahoo |
+| `@deepl_search` | DeepL Translator |
+| `@arxiv_search` | arXiv |
+| `@github_search` | GitHub code search |
+| `@hackernews_search` | Hacker News |
+| `@producthunt_search` | Product Hunt |
+| `@scholar_search` | Google Scholar |
+
+## All Tools (Plugin)
+
+| Tool | Description |
+|------|-------------|
+| `camofox_create_tab` | Create a new browser tab |
+| `camofox_navigate` | Navigate to URL or expand search macro |
+| `camofox_snapshot` | Accessibility snapshot with element refs + screenshot |
+| `camofox_click` | Click element by ref or CSS selector |
+| `camofox_type` | Type text into element |
+| `camofox_scroll` | Scroll page |
+| `camofox_screenshot` | PNG screenshot |
+| `camofox_evaluate` | Run JavaScript in page context |
+| `camofox_links` | Extract all HTTP links |
+| `camofox_images` | Extract img element metadata |
+| `camofox_downloads` | List captured downloads |
+| `camofox_stats` | Tab statistics |
+| `camofox_back` | Navigate back |
+| `camofox_forward` | Navigate forward |
+| `camofox_refresh` | Reload page |
+| `camofox_press` | Press keyboard key |
+| `camofox_wait` | Wait for selector or timeout |
+| `camofox_list_tabs` | List open tabs |
+| `camofox_close_tab` | Close a tab |
+| `camofox_import_cookies` | Import Netscape cookie file |
 
 ## Element Refs
 

@@ -330,6 +330,7 @@ export default function register(api: PluginApi) {
             "@youtube_search",
             "@amazon_search",
             "@reddit_search",
+            "@reddit_subreddit",
             "@wikipedia_search",
             "@twitter_search",
             "@yelp_search",
@@ -339,6 +340,18 @@ export default function register(api: PluginApi) {
             "@instagram_search",
             "@tiktok_search",
             "@twitch_search",
+            "@perplexity_search",
+            "@phind_search",
+            "@brave_search",
+            "@kagi_search",
+            "@bing_search",
+            "@yahoo_search",
+            "@deepl_search",
+            "@arxiv_search",
+            "@github_search",
+            "@hackernews_search",
+            "@producthunt_search",
+            "@scholar_search",
           ],
         },
         query: { type: "string", description: "Search query (when using macro)" },
@@ -517,6 +530,234 @@ export default function register(api: PluginApi) {
       });
 
       return toToolResult({ imported: pwCookies.length, userId, result });
+    },
+  }));
+
+  // --- Missing tools (server supports these but plugin doesn't expose them) ---
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_links",
+    description:
+      "Extract all HTTP links from a Camoufox page with their href URLs and text. Useful for sitemap discovery, finding all result links on a search page, or crawling navigation links.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+        limit: { type: "number", description: "Max links to return (default: 50)" },
+        offset: { type: "number", description: "Pagination offset (default: 0)" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId, limit, offset } = params as { tabId: string; limit?: number; offset?: number };
+      const userId = ctx.agentId || fallbackUserId;
+      const qs = new URLSearchParams({ userId });
+      if (limit != null) qs.set("limit", String(limit));
+      if (offset != null) qs.set("offset", String(offset));
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/links?${qs}`);
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_downloads",
+    description:
+      "List captured downloads from a Camoufox tab. Downloads are captured when the browser triggers a file download. Use includeData=true to get base64-encoded file contents (max 20MB).",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+        includeData: { type: "boolean", description: "Include base64 file data (default: false)" },
+        consume: { type: "boolean", description: "Clear downloads after reading (default: false)" },
+        maxBytes: { type: "number", description: "Max bytes of inline data (default: 20MB)" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId, includeData, consume, maxBytes } = params as {
+        tabId: string;
+        includeData?: boolean;
+        consume?: boolean;
+        maxBytes?: number;
+      };
+      const userId = ctx.agentId || fallbackUserId;
+      const qs = new URLSearchParams({ userId });
+      if (includeData) qs.set("includeData", "true");
+      if (consume) qs.set("consume", "true");
+      if (maxBytes != null) qs.set("maxBytes", String(maxBytes));
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/downloads?${qs}`);
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_images",
+    description:
+      "Extract img element metadata (src, alt, dimensions) from a Camoufox page. Use includeData=true for inline data URLs — useful for extracting logos, charts, or small images without separate fetch.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+        includeData: { type: "boolean", description: "Include inline data URLs (default: false)" },
+        maxBytes: { type: "number", description: "Max bytes per image for inline data (default: 20MB)" },
+        limit: { type: "number", description: "Max images to return (default: 8, max: 20)" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId, includeData, maxBytes, limit } = params as {
+        tabId: string;
+        includeData?: boolean;
+        maxBytes?: number;
+        limit?: number;
+      };
+      const userId = ctx.agentId || fallbackUserId;
+      const qs = new URLSearchParams({ userId });
+      if (includeData) qs.set("includeData", "true");
+      if (maxBytes != null) qs.set("maxBytes", String(maxBytes));
+      if (limit != null) qs.set("limit", String(limit));
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/images?${qs}`);
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_stats",
+    description:
+      "Get tab statistics: visited URLs, tool call count, download count, and ref count. Useful for debugging, session auditing, or tracking progress through a scraping workflow.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId } = params as { tabId: string };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/stats?userId=${userId}`);
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_back",
+    description: "Navigate back in browser history. Use after following a link and needing to return to the previous page.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId } = params as { tabId: string };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/back`, {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      });
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_forward",
+    description: "Navigate forward in browser history (only works after going back).",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId } = params as { tabId: string };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/forward`, {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      });
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_refresh",
+    description: "Reload the current page. Use to get fresh content after a dynamic page updates.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId } = params as { tabId: string };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/refresh`, {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      });
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_wait",
+    description:
+      "Wait for a CSS selector or XPath to appear in the DOM, or wait for a timeout. Use after clicking a button that triggers dynamic content loading.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+        selector: { type: "string", description: "CSS selector to wait for" },
+        timeout: { type: "number", description: "Max wait time in ms (default: 15000)" },
+      },
+      required: ["tabId"],
+    },
+    async execute(_id, params) {
+      const { tabId, selector, timeout } = params as {
+        tabId: string;
+        selector?: string;
+        timeout?: number;
+      };
+      const userId = ctx.agentId || fallbackUserId;
+      const body: Record<string, unknown> = { userId };
+      if (selector) body.selector = selector;
+      if (timeout != null) body.timeout = timeout;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/wait`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return toToolResult(result);
+    },
+  }));
+
+  api.registerTool((ctx: ToolContext) => ({
+    name: "camofox_press",
+    description:
+      "Press a keyboard key in the page. Use for pressing Enter after typing, Tab to move focus, Escape to close modals, ArrowDown to scroll, etc.",
+    parameters: {
+      type: "object",
+      properties: {
+        tabId: { type: "string", description: "Tab identifier" },
+        key: {
+          type: "string",
+          description:
+            "Key name — Enter, Tab, Escape, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Backspace, Delete, F1-F12, etc.",
+        },
+      },
+      required: ["tabId", "key"],
+    },
+    async execute(_id, params) {
+      const { tabId, key } = params as { tabId: string; key: string };
+      const userId = ctx.agentId || fallbackUserId;
+      const result = await fetchApi(baseUrl, `/tabs/${tabId}/press`, {
+        method: "POST",
+        body: JSON.stringify({ userId, key }),
+      });
+      return toToolResult(result);
     },
   }));
 
