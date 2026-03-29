@@ -122,6 +122,7 @@ Use these instead of constructing URLs:
 | Tool | Description |
 |------|-------------|
 | `camofox_create_tab` | Create a new browser tab |
+| `camofox_open_tab` | Create tab + navigate in one atomic request |
 | `camofox_navigate` | Navigate to URL or expand search macro |
 | `camofox_snapshot` | Accessibility snapshot with element refs + screenshot |
 | `camofox_click` | Click element by ref or CSS selector |
@@ -141,6 +142,30 @@ Use these instead of constructing URLs:
 | `camofox_list_tabs` | List open tabs |
 | `camofox_close_tab` | Close a tab |
 | `camofox_import_cookies` | Import Netscape cookie file |
+| `camofox_act` | Unified click/type/press/scroll — auto-refreshes stale refs |
+| `camofox_youtube_transcript` | Extract YouTube transcript |
+
+## Shell CLI
+
+```bash
+# Quick commands
+camofox health                    # Check server health
+camofox open https://example.com  # Open URL in new tab
+camofox snapshot --tab <id>       # Get accessibility snapshot
+camofox links --tab <id>           # Extract all links
+camofox screenshot --tab <id> --out shot.png
+camofox cookies /tmp/cookies.txt  # Import cookie file
+camofox youtube-transcript "https://youtube.com/watch?v=..."
+
+# Interactive workflows
+camofox click e5 --tab <id>       # Click element by ref
+camofox type "hello" e3 --tab <id> --submit
+camofox act click e5 --tab <id>   # Unified dispatcher (auto-refreshes refs)
+camofox act type "query" --ref e2 --tab <id> --submit
+
+# Install: pip install httpx
+# Start server first: cd camofox-browser && node server.js
+```
 
 ## Element Refs
 
